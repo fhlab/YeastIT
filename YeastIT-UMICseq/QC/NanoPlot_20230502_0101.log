@@ -1,0 +1,26 @@
+2023-05-02 01:01:24,573 NanoPlot 1.36.2 started with arguments Namespace(N50=False, alength=False, bam=None, barcoded=False, color='#4CB391', colormap='Greens', cram=None, downsample=None, dpi=100, drop_outliers=True, fasta=None, fastq=None, fastq_minimal=None, fastq_rich=None, feather=None, font_scale=1, hide_stats=False, huge=False, info_in_report=False, legacy=None, listcolormaps=False, listcolors=False, loglength=False, maxlength=None, minlength=None, minqual=None, no_N50=False, no_supplementary=False, outdir='./QC', path='./QC/', percentqual=False, pickle=None, plots=['kde', 'dot'], prefix='', raw=False, readtype='1D', runtime_until=None, store=False, summary=['sequencing_summary.txt'], threads=4, title=None, tsv_stats=False, ubam=None, verbose=False)
+2023-05-02 01:01:24,573 Python version is: 3.7.10 (default, Feb 26 2021, 18:47:35)  [GCC 7.3.0]
+2023-05-02 01:01:24,580 Nanoget: Collecting metrics from summary file sequencing_summary.txt for 1D sequencing
+2023-05-02 01:01:38,849 Nanoget: Finished collecting statistics from summary file sequencing_summary.txt
+2023-05-02 01:01:38,857 Note: NumExpr detected 12 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+2023-05-02 01:01:38,857 NumExpr defaulting to 8 threads.
+2023-05-02 01:01:39,908 Reduced DataFrame memory usage from 395.5041046142578Mb to 214.23138999938965Mb
+2023-05-02 01:01:41,072 Nanoget: Gathered all metrics of 8639919 reads
+2023-05-02 01:01:44,752 Note: NumExpr detected 12 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+2023-05-02 01:01:44,752 NumExpr defaulting to 8 threads.
+2023-05-02 01:01:45,239 Calculated statistics
+2023-05-02 01:01:45,242 Using sequenced read lengths for plotting.
+2023-05-02 01:01:45,757 Hidding 273647 length outliers in length plots.
+2023-05-02 01:01:45,996 NanoPlot:  Valid color #4CB391.
+2023-05-02 01:01:45,997 NanoPlot:  Valid colormap Greens.
+2023-05-02 01:01:46,448 NanoPlot:  Creating length plots for Read length.
+2023-05-02 01:01:46,453 NanoPlot:  Using 8366272 reads maximum of 3754bp.
+2023-05-02 01:01:51,192 Created length plots
+2023-05-02 01:01:51,566 NanoPlot:  Creating Read lengths vs Average read quality plots using statistics from 8366272 reads.
+2023-05-02 01:01:54,662 Created LengthvsQual plot
+2023-05-02 01:01:54,662 Nanoplotter: Creating heatmap of reads per channel using 8639919 reads.
+2023-05-02 01:01:55,173 Created spatialheatmap for succesfull basecalls.
+2023-05-02 01:01:55,173 Nanoplotter: Creating timeplots using 8639919 (full) or 10000 (subsampled dataset) reads.
+2023-05-02 01:02:01,407 Created timeplots.
+2023-05-02 01:02:01,407 Writing html report.
+2023-05-02 01:02:01,427 Finished!
