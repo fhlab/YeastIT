@@ -31,9 +31,9 @@ def initialize_mutation_likelihoods(frequencies):
 
 # Define the 6 unique frequencies
 frequencies = {
-    "A": {"C": 0.01, "G": 0.76, "T": 0.01},
-    "C": {"G": 0.07, "T": 0.08},
-    "G": {"T": 0.07},
+    "A": {"C": 1, "G": 1, "T": 1},
+    "C": {"G": 1, "T": 1},
+    "G": {"T": 1},
     "T": {}
 }
 
@@ -66,23 +66,14 @@ codon_table = {
 
 aa_transitions = defaultdict(lambda: defaultdict(float))
 
-# Loop through the amino acids and their corresponding codons in the codon table
 for aa1, codons1 in codon_table.items():
-    # Loop through each codon associated with the current amino acid (aa1)
     for codon1 in codons1:
-        # Loop through the amino acids and their corresponding codons in the codon table again to compare all possible pairs of amino acids and their codons
         for aa2, codons2 in codon_table.items():
-            # Loop through each codon associated with the current amino acid (aa2)
             for codon2 in codons2:
-                # Calculate the number of differences between the two codons (codon1 and codon2)
                 differences = sum(1 for a, b in zip(codon1, codon2) if a != b)
-                # Check if the codons differ by exactly one nucleotide
                 if differences == 1:
-                    # Find the differing nucleotides between the two codons (nt1 and nt2)
                     nt1, nt2 = next((a, b) for a, b in zip(codon1, codon2) if a != b)
-                    # Update the amino acid transition likelihoods by adding the mutation likelihood of the two differing nucleotides (nt1 and nt2) to the existing value
                     aa_transitions[aa1][aa2] += mutation_likelihoods[nt1][nt2]
-
 
 # Get a list of amino acid labels including the stop codon label
 aa_labels = list(aa_transitions.keys())
@@ -219,7 +210,6 @@ for i in range(len(aa_labels)):
 
 # Calculate the optimal k value based on edge weights
 k = edge_weight_k(G)
-k=0.1
 
 # Visualize the graph
 pos = nx.spring_layout(G, seed=42, k=k)  # Use the calculated k value
@@ -306,7 +296,6 @@ for i in range(len(aa_labels)):
 
 # Calculate the optimal k value based on edge weights
 k = edge_weight_k(G)
-k=0.1
 
 # Visualize the graph
 pos = nx.spring_layout(G, seed=42, k=k)  # Use the calculated k value

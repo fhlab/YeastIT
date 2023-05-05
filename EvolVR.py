@@ -66,13 +66,22 @@ codon_table = {
 
 aa_transitions = defaultdict(lambda: defaultdict(float))
 
+
+# Loop through the amino acids and their corresponding codons in the codon table
 for aa1, codons1 in codon_table.items():
+    # Loop through each codon associated with the current amino acid (aa1)
     for codon1 in codons1:
+        # Loop through the amino acids and their corresponding codons in the codon table again to compare all possible pairs of amino acids and their codons
         for aa2, codons2 in codon_table.items():
+            # Loop through each codon associated with the current amino acid (aa2)
             for codon2 in codons2:
+                # Calculate the number of differences between the two codons (codon1 and codon2)
                 differences = sum(1 for a, b in zip(codon1, codon2) if a != b)
+                # Check if the codons differ by exactly one nucleotide
                 if differences == 1:
+                    # Find the differing nucleotides between the two codons (nt1 and nt2)
                     nt1, nt2 = next((a, b) for a, b in zip(codon1, codon2) if a != b)
+                    # Update the amino acid transition likelihoods by adding the mutation likelihood of the two differing nucleotides (nt1 and nt2) to the existing value
                     aa_transitions[aa1][aa2] += mutation_likelihoods[nt1][nt2]
 
 # Get a list of amino acid labels including the stop codon label
@@ -141,11 +150,11 @@ np.fill_diagonal(mask, True)
 
 # Create a custom colormap with grey color for the diagonal
 cmap = sns.color_palette("YlGnBu", as_cmap=True)
-cmap.set_bad(color='grey')
+cmap.set_bad(color='lightgrey')
 
 # Plot the heatmap
 plt.figure(figsize=(10, 8))
-ax = sns.heatmap(normalized_matrix, annot=False, cmap=cmap, mask=mask, xticklabels=aa_labels, yticklabels=aa_labels)
+ax = sns.heatmap(normalized_matrix, annot=False, cmap=cmap, mask=mask, xticklabels=aa_labels, yticklabels=aa_labels, vmax=1)
 
 # Add lines to separate groups
 for boundary in group_boundaries[1:-1]:

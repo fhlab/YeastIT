@@ -32,7 +32,7 @@ def initialize_mutation_likelihoods(frequencies):
 # Define the 6 unique frequencies
 frequencies = {
     "A": {"C": 0.04, "G": 0.65, "T": 0.17},
-    "C": {"G": 0.01, "T": 0.01},
+    "C": {"G": 0.01, "T": 0.10},
     "G": {"T": 0.03},
     "T": {}
 }
@@ -141,11 +141,11 @@ np.fill_diagonal(mask, True)
 
 # Create a custom colormap with grey color for the diagonal
 cmap = sns.color_palette("YlGnBu", as_cmap=True)
-cmap.set_bad(color='grey')
+cmap.set_bad(color='lightgrey')
 
 # Plot the heatmap
 plt.figure(figsize=(10, 8))
-ax = sns.heatmap(normalized_matrix, annot=False, cmap=cmap, mask=mask, xticklabels=aa_labels, yticklabels=aa_labels)
+ax = sns.heatmap(normalized_matrix, annot=False, cmap=cmap, mask=mask, xticklabels=aa_labels, yticklabels=aa_labels, vmax=1)
 
 # Add lines to separate groups
 for boundary in group_boundaries[1:-1]:
