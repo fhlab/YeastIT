@@ -1,0 +1,11 @@
+Method,Mutation rate,Host
+EvolVR,0.09,E. coli
+PACE,1.25,E. coli
+MutaT7,0.34,E. coli
+OrthoRep,0.6,S. cerevisiae
+TRIDENT,0.7,S. cerevisiae
+ICE,0.05,S. cerevisiae
+YeastIT1,1.37,S. cerevisiae
+YeastIT2,0.09,S. cerevisiae
+epPCR (Mutazyme II),0,in vitro
+"epPCR (Taq, Mn2+)",0,in vitro

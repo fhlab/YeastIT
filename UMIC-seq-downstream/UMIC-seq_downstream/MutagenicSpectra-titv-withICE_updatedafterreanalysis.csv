@@ -1,0 +1,21 @@
+Method,Mutation,%,Host
+EvolVR,transition,54.85,E. coli
+EvolVR,transversion,45.15,E. coli
+PACE,transition,57.89,E. coli
+PACE,transversion,42.11,E. coli
+MutaT7,transition,100,E. coli
+MutaT7,transversion,0,E. coli
+OrthoRep,transition,94.47,S. cerevisiae
+OrthoRep,transversion,5.53,S. cerevisiae
+TRIDENT,transition,100,S. cerevisiae
+TRIDENT,transversion,0,S. cerevisiae
+YeastIT1,transition,99.4,S. cerevisiae
+YeastIT1,transversion,0.6,S. cerevisiae
+YeastIT2,transition,83.1,S. cerevisiae
+YeastIT2,transversion,16.9,S. cerevisiae
+epPCR (Mutazyme II),transition,45.55,in vitro
+epPCR (Mutazyme II),transversion,54.45,in vitro
+"epPCR (Taq, Mn2+)",transition,74.57,in vitro
+"epPCR (Taq, Mn2+)",transversion,25.43,in vitro
+ICE,transition,51,S. cerevisiae
+ICE,transversion,49,S. cerevisiae
