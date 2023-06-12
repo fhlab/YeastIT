@@ -9,8 +9,12 @@ import sys
 import json
 import glob
 import networkx as nx
+import collections
+import pandas as pd
 
 bias_files = glob.glob('Biases/*.txt') # Glob collects all file paths matching the pattern
+
+results = []
 
 for file_path in bias_files:
     print("Processing file:", file_path)  # Print the current file being processed
@@ -202,11 +206,6 @@ for file_path in bias_files:
             if weight > 0.00001:
                 G.add_edge(codon1, codon2, weight=weight)
 
-    # Update labels for nodes with out-degree of zero (Delete this block iso not required)
-    for node in G.nodes():
-        if G.out_degree(node) == 0:
-            G.nodes[node]['label'] += '-X'
-
     # Create color palettes with distinct colors for each amino acid
     aa_palette = sns.color_palette("hls", len(codon_table))
 
@@ -263,3 +262,76 @@ for file_path in bias_files:
     plt.title(f"{title} Codon Conversion Probabilities Directed Graph")
     plt.savefig(os.path.join(directory, output_filename_directed_graph), format="tif", dpi=300)
     plt.close()
+
+    # Compute centrality measures
+    degree_centrality = nx.degree_centrality(G)
+    closeness_centrality = nx.closeness_centrality(G, distance = "weight")
+    
+    # Create a DataFrame to hold the centrality measures
+    df = pd.DataFrame({
+        'amino_acid': [codon_table_inverse[codon] for codon in G.nodes()],
+        'degree': [degree_centrality[codon] for codon in G.nodes()],
+        'closeness': [closeness_centrality[codon] for codon in G.nodes()]
+    })
+    
+    # Aggregate by amino acid
+    df_aggregated = df.groupby('amino_acid').mean()
+    
+    # Add the filename and the aggregated values to the results
+    for aa in df_aggregated.index:
+        results.append({
+            'file': filename,
+            'amino_acid': aa,
+            'degree': df_aggregated.loc[aa, 'degree'],
+            'closeness': df_aggregated.loc[aa, 'closeness']
+        })
+
+##### Plotting Closeness of aggregated amino acids #####
+
+# Convert the results to a DataFrame
+df_results = pd.DataFrame(results)
+
+# Normalize the measures by the number of codons for each amino acid
+df_results['degree'] /= df_results['amino_acid'].map(lambda aa: len(codon_table[aa]))
+df_results['closeness'] /= df_results['amino_acid'].map(lambda aa: len(codon_table[aa]))
+
+# Remove "_Bias" from the file column
+df_results['file'] = df_results['file'].str.replace('_Bias', '')
+
+# Group data by file and amino_acid, and compute mean closeness
+grouped_data = df_results.groupby(['file', 'amino_acid'])['closeness'].mean().reset_index()
+
+# Pivot data to have amino acids as columns, files as index and closeness as values
+pivoted_data = grouped_data.pivot(index='file', columns='amino_acid', values='closeness')
+
+# Calculate total closeness for each system and sort based on it
+pivoted_data['total_closeness'] = pivoted_data.sum(axis=1)
+pivoted_data.sort_values('total_closeness', inplace=True)
+
+# Normalize the closeness centrality for each system so that it sums to 1
+pivoted_data = pivoted_data.div(pivoted_data['total_closeness'], axis=0)
+
+# Drop the total_closeness column before plotting
+pivoted_data.drop(columns='total_closeness', inplace=True)
+
+# Plot the data as stacked bar plot
+ax = pivoted_data.plot(kind='bar', stacked=True, figsize=(10,7))
+
+# Set the title and axis labels
+plt.title('Average relative closeness centrality values of codons by amino acid')
+plt.ylabel('Relative Closeness Centrality')
+
+# Get current legend
+handles, labels = ax.get_legend_handles_labels()
+
+# Reverse the order of legend items and adjust the location of the legend
+ax.legend(reversed(handles), reversed(labels), title='Amino Acid', bbox_to_anchor=(1.0, 1), loc='upper left')
+
+# Create the Properties directory if it doesn't exist
+directory = "Properties"
+if not os.path.exists(directory):
+    os.makedirs(directory)
+
+plt.savefig("Properties/System_Closenesses.tif", format="tif", dpi=300)
+plt.close()
+
