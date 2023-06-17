@@ -9,6 +9,8 @@ import sys
 import json
 import glob
 import networkx as nx
+from matplotlib.lines import Line2D
+
 
 bias_files = glob.glob('Biases/*.txt') # Glob collects all file paths matching the pattern
 
@@ -201,14 +203,13 @@ for file_path in bias_files:
             weight = normalized_matrix[i, j]
             if weight > 0.00001:
                 G.add_edge(codon1, codon2, weight=weight)
-
-    # Update labels for nodes with out-degree of zero (Delete this block iso not required)
-    for node in G.nodes():
-        if G.out_degree(node) == 0:
-            G.nodes[node]['label'] += '-X'
-
-    # Create color palettes with distinct colors for each amino acid
+ 
+   # Create color palettes with distinct colors for each amino acid
     aa_palette = sns.color_palette("hls", len(codon_table))
+
+    aa_to_codons = defaultdict(list)
+    for codon, aa in codon_table_inverse.items():
+        aa_to_codons[aa].append(codon)
 
     # Map amino acids to colors
     aa_to_color = dict(zip(codon_table.keys(), aa_palette))
@@ -217,13 +218,30 @@ for file_path in bias_files:
     codon_to_color = {}
     for aa, codons in codon_table.items():
         for codon in codons:
-            codon_to_color[codon] = aa_to_color[aa]
+            codon_to_color[codon] = aa_to_color[aa]    
 
     # Use the mapping to get the color of each node
     node_colors = [codon_to_color[node] for node in G.nodes()]
    
     # Visualize the graph
     pos = nx.spring_layout(G, seed=1, k=k)  # Use the stored k value
+
+    # Create a mapping of codons to sequential numbers
+    codon_to_number = {codon: i+1 for i, codon in enumerate(codon_labels)}
+
+    # Create a mapping of codons to sequential numbers per each amino acid
+    codon_to_number = {}
+    for aa, codons in codon_table.items():
+        for i, codon in enumerate(codons):
+            codon_to_number[codon] = i+1
+
+    # Update labels for nodes with the amino acid and the corresponding number
+    for node in G.nodes():
+        G.nodes[node]['label'] = f'{G.nodes[node]["label"]}{codon_to_number[node]}'
+
+    # Draw the node labels
+    labels = nx.get_node_attributes(G, 'label')
+    nx.draw_networkx_labels(G, pos, labels=labels)
 
     # Draw the nodes
     nx.draw_networkx_nodes(G, pos, node_color=node_colors)
@@ -251,9 +269,11 @@ for file_path in bias_files:
                                    edge_vmin=0, edge_vmax=0.01, ax=None,
                                    arrows=True, arrowstyle='-|>', arrowsize=15,
                                    connectionstyle=f"arc3, rad={-offset}")
-    
 
     plt.axis("off")
+    
+    # Create a new dictionary to map numbers to codons for the legend
+    aa_number_to_codon = {f"{aa}-{i+1}": codon for aa, codons in aa_to_codons.items() for i, codon in enumerate(codons)}
 
     # Create the Directed_Graphs directory if it doesn't exist
     directory = "Directed_Graphs"
@@ -263,3 +283,30 @@ for file_path in bias_files:
     plt.title(f"{title} Codon Conversion Probabilities Directed Graph")
     plt.savefig(os.path.join(directory, output_filename_directed_graph), format="tif", dpi=300)
     plt.close()
+
+# Define legend elements
+legend_elements = [Line2D([0], [0], marker='o', color='w', label=f'{codon}: {aa}-{codon_to_number[codon]}',
+                          markerfacecolor=codon_to_color[codon], markersize=5) 
+                   for aa, codons in codon_table.items() for codon in codons]
+
+# Create a new figure
+fig_leg = plt.figure(figsize=(10, 5))  # Adjust size as needed
+
+legend_elements = [Line2D([0], [0], marker='o', color='w', label=f'{codon}: {aa}{codon_to_number[codon]}',
+                              markerfacecolor=codon_to_color[codon], markersize=4)
+                   for aa, codons in codon_table.items() for codon in codons]
+ax.legend(handles=legend_elements, loc='upper left', ncol=3)
+
+# Create legend
+leg = plt.legend(handles=legend_elements, loc='center', ncol=3)
+
+# Remove axes and whitespace
+plt.gca().set_axis_off()
+fig_leg.subplots_adjust(top = 1, bottom = 0, right = 1, left = 0, 
+            hspace = 0, wspace = 0)
+plt.margins(0,0)
+plt.gca().xaxis.set_major_locator(plt.NullLocator())
+plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+# Save legend figure
+fig_leg.savefig('Directed_Graphs/legend.tif', format='tif', dpi=300, bbox_inches='tight', pad_inches=0)
