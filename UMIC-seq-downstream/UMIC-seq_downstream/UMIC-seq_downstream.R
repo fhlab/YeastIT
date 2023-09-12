@@ -5,6 +5,9 @@ library(gridExtra)
 library(dplyr)
 library (ggpubr)
 library(iNEXT)
+library(actuar)
+library(cowplot)
+library(readr)
 
 #load and process all individual maf files
 maf_yeastit1 <- data.table::fread("allsamples_bc02.vcf.maf")
@@ -105,60 +108,71 @@ yeast2_clusterlist2_ordered$ClusterID <- c(1:309)
 yeast2_clusterlist2_ordered$mutno <- sapply(yeast2_clusterlist2_ordered$`SNP position`, length)
 
 
+#population diversity estimation
+yeast1_clusterlist2_ordered_add0 <- rbind(yeast1_clusterlist2_ordered, c(0,0,3305,670,0))
+yeast2_clusterlist2_ordered_add0 <- rbind(yeast2_clusterlist2_ordered, c(0,0,3556,310,0))
+
 mutno=1/60
-p11 <- ggplot(yeast1_clusterlist2_ordered, aes(x = ClusterID, y = Frequency)) +
+p11 <- ggplot(yeast1_clusterlist2_ordered_add0, aes(x = ClusterID, y = Frequency)) +
   theme_bw(base_size=12)  +
-geom_bar(fill = "#68AD7D", stat = "identity") + geom_point(aes(x=ClusterID, y=60*yeast1_clusterlist2_ordered$mutno), colour="#DEE0E4", size=1) +
+  geom_bar(fill = "#68AD7D", stat = "identity") + geom_point(aes(x=ClusterID, y=60*yeast1_clusterlist2_ordered_add0$mutno), colour="#DEE0E4", size=1) +
   scale_y_continuous(sec.axis = sec_axis(~.*mutno, name="Mutation count")) +
   theme(
     axis.title.y = element_text(color = c("#68AD7D"), size=12),
     axis.title.y.right = element_text(color = c("#8C838D"), size=12)
   ) + xlab("Variant ID") + ylab("Cluster count")
- 
+
 p11
 
-p12 <- ggplot(yeast2_clusterlist2_ordered, aes(x = ClusterID, y = Frequency)) +
+p12 <- ggplot(yeast2_clusterlist2_ordered_add0, aes(x = ClusterID, y = Frequency)) +
   theme_bw(base_size=12) +
   geom_bar(fill = "#68AD7D", stat = "identity") + geom_point(aes(x=ClusterID, y=60*mutno), colour="#DEE0E4", size=1) +
   scale_y_continuous(sec.axis = sec_axis(~.*mutno, name="Mutation count")) +
   theme(
     axis.title.y = element_text(color = c("#68AD7D"), size=12),
     axis.title.y.right = element_text(color = c("#8C838D"), size=12))  +
-    xlab("Variant ID") + ylab("Cluster count")
+  xlab("Variant ID") + ylab("Cluster count")
 
 p12
 
 grid.arrange(arrangeGrob(p11, p12, widths=c(1,1), nrow=1)) 
 
 
-
-#population diversity estimation
-yeast1_clusterlist2_ordered_add0 <- rbind(yeast1_clusterlist2_ordered, c(0,0,3305,670,0))
-yeast2_clusterlist2_ordered_add0 <- rbind(yeast2_clusterlist2_ordered, c(0,0,3556,310,0))
-
 yeast1_clusterlist2_ordered_freqtable <- subset(yeast1_clusterlist2_ordered_add0, select=c("Frequency"))
 yeast2_clusterlist2_ordered_freqtable <- subset(yeast2_clusterlist2_ordered_add0, select=c("Frequency"))
 
-
-yeast1_iNEXT <- iNEXT(yeast1_clusterlist2_ordered_freqtable, q=c(0,1,2), datatype="abundance", endpoint=100000)
-yeast2_iNEXT <- iNEXT(yeast2_clusterlist2_ordered_freqtable, q=c(0,1,2), datatype="abundance", endpoint=100000)
+yeast1_iNEXT <- iNEXT(yeast1_clusterlist2_ordered_freqtable, q=c(0), datatype="abundance", endpoint=200000, knots =30)
+yeast2_iNEXT <- iNEXT(yeast2_clusterlist2_ordered_freqtable, q=c(0), datatype="abundance", endpoint=100000, knots=30)
 
 #Coverage-based R/E sampling curves: iNEXT computes diversity estimates for
 # rarefied and extrapolated samples with sample completeness (as measured by
 # sample coverage) up to the coverage value of double the reference sample size (bydefault) or 
 # a user-specified coverage. This type of sampling curve plots the
 # diversity estimates with respect to sample coverage. 
+#yeast1_iNEXT2 <- estimateD(yeast1_clusterlist2_ordered_freqtable, q = c(0,1,2), datatype = "abundance", base="coverage", level=0.99, conf=0.95)
 
-p13 <- ggiNEXT(yeast1_iNEXT, type=2) + theme_bw(base_size=12) + theme(legend.position="none")
-p13 <- p13 + xlab("Estimated number of variants")
+yeast1_iNEXT2 <- estimateD(yeast1_clusterlist2_ordered_freqtable, q = c(0,1,2), datatype = "abundance", base="size", level=200000)
+yeast2_iNEXT2 <- estimateD(yeast2_clusterlist2_ordered_freqtable, q = c(0,1,2), datatype = "abundance", base="size", level=200000)
+
+
+
+#p12 and p13 show estimation of library difersity after 1st transformation to E.coli where approximately 10k 
+#colonies were obtained for each variant
+
+p13 <- ggiNEXT(yeast1_iNEXT, type=1, se=TRUE) + theme_bw(base_size=12) + theme(legend.position="none")
+p13 <- p13 + xlab("Sample size")
+p13 <- p13 + ylab("Estimated number of unique variants")
 p13
-p14 <- ggiNEXT(yeast1_iNEXT, type=3) +   theme_bw(base_size=12) 
+
+
+p14 <- ggiNEXT(yeast2_iNEXT, type=1, se=TRUE) + theme_bw(base_size=12) + theme(legend.position="none")
+p14 <- p14 + xlab("Sample size")
+p14 <- p14 + ylab("Estimated number of unique variants")
 p14
-p15 <- ggiNEXT(yeast2_iNEXT, type=2) +   theme_bw(base_size=12) + theme(legend.position="right")
-p15 <- p15+ xlab("Estimated number of variants")
-p16 <- ggiNEXT(yeast2_iNEXT, type=3) +   theme_bw(base_size=12) 
-grid.arrange(arrangeGrob(p13, p15, widths=c(1,1.4), nrow=1)) 
-#need to fix legend manually 
+
+grid.arrange(arrangeGrob(p13, p14, widths=c(1,1), nrow=1)) 
+
+
 
 #mutation spectra plots
 #boxplots - mutation spectra - unique variants, cds only
@@ -318,7 +332,7 @@ p2
 
 grid.arrange(arrangeGrob(p1, p2, p4, p6, p3, p5, widths=c(1,1), heights=c(1,1,1.3), nrow=3))
 
-
+plot_grid(p1, p2, p4, p6, p3, p5, align = "v", nrow = 3, rel_heights = c(1, 1, 1.2))
 
 
 #plot histograms: Frequency distribution of unique sequence variants with 
@@ -393,4 +407,58 @@ p7 <- p7 + theme(legend.title = element_blank()) + theme(plot.background = eleme
 p7 <- p7 + theme(legend.position="top") + guides(colour=guide_legend(nrow =1))
 p7
 
+
+#mutation spectrum analysis of all methods
+
+
+titv <- read_csv("MutagenicSpectra-titv-withICE_updatedafterreanalysis.csv")
+sixtypes <- read_csv("MutagenicSpectra-6types-withICE_updatedafterreanalysis.csv")
+rates <- read_csv("MutagenicSpectra-rates-withICE-withPCR_updated.csv")
+
+#transition vs transversion analysis - all methods
+p17 <- ggplot(titv, aes(fill=Mutation, y=`%`, x=Method)) + 
+  geom_bar(position="stack", stat="identity") +
+  scale_fill_manual(values = c("#68AD7D", "#A77EAD")) +
+  theme_bw(base_size=12) +
+  xlab("") + ylab("Mutations (%)") +
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) +
+  theme(legend.title = element_blank()) +
+  theme(plot.background = element_rect(fill = "transparent",colour = NA),  legend.box.background = element_rect(fill = "transparent", colour=NA)) +
+  scale_x_discrete(limits=c("epPCR (Mutazyme II)", "epPCR (Taq, Mn2+)", "EvolVR", "MutaT7", "eMutaT7", "PACE", "OrthoRep", "TRIDENT", "YeastIT1", "YeastIT2"))
+p17 <- p17 + theme(axis.title.x = element_blank(), axis.text.x = element_blank())
+#p17 <- p17 + theme(legend.position="top") + guides(colour=guide_legend(nrow =1))
+p17 <- p17 + theme(legend.position="none") 
+p17
+
+#mutation type analysis - all methods
+p18 <- ggplot(sixtypes, aes(fill=factor(`Mutation type`, levels=c("AT>GC","GC>AT","AT>CG", "AT>TA", "GC>TA", "GC>CG")), y=`%`, x=Method)) + 
+  geom_bar(position="stack", stat="identity") +
+  scale_fill_manual(values = c("#68AD7D", "#97D2A9", "#A77EAD", "#7c6f91ff", "#8C838D",  "#AE617B")) +
+  theme_bw(base_size=12) +
+  xlab("") + ylab("Mutations (%)") +
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) +
+  theme(legend.title = element_blank()) +
+  theme(plot.background = element_rect(fill = "transparent",colour = NA),  legend.box.background = element_rect(fill = "transparent", colour=NA)) 
+p18 <- p18 + scale_x_discrete(limits=c("epPCR (Mutazyme II)", "epPCR (Taq, Mn2+)", "EvolVR", "MutaT7", "eMutaT7", "PACE", "OrthoRep", "TRIDENT", "YeastIT", "YeastIT2"))
+p18 <- p18 + theme(axis.title.x = element_blank(), axis.text.x = element_blank())
+#p18 <- p18 + theme(legend.position="top") + guides(colour=guide_legend(nrow =1))
+p18 <- p18 + theme(legend.position="none") 
+p18
+
+
+#rates$`Mutation rate` <- as.factor(rates$`Mutation rate`)
+p19 <- ggplot(rates, aes(x=Method, y=rates$`Mutation rate`, fill=c("#68AD7D")))
+p19 <- p19 + geom_bar(stat="identity") + scale_fill_manual(values = c("#68AD7D")) + theme_bw(base_size=12)
+p19 <- p19 + xlab("") + ylab(expression("Mutation rate"~(kb^{-1}~day^{-1}))) 
+p19 <- p19 + theme(legend.title = element_blank()) 
+p19 <- p19 + theme(plot.background = element_rect(fill = "transparent",colour = NA),  legend.box.background = element_rect(fill = "transparent", colour=NA))
+p19 <- p19 + scale_x_discrete(limits=c("epPCR (Mutazyme II)", "epPCR (Taq, Mn2+)", "EvolVR", "MutaT7", "eMutaT7", "PACE", "OrthoRep", "TRIDENT", "YeastIT1", "YeastIT2"))
+p19 <- p19 + theme(axis.text.x = element_text(angle = 60, hjust = 1)) 
+p19 <- p19 + theme(legend.position="none") 
+p19   
+
+p20 <- ggarrange(p17,p18,p19,nrow=3,ncol=1, heights=c(0.8,0.9,1.05))
+p20
+
+plot_grid(p1, p2, p17, p4, p6, p18, p3, p5, p19, align = "v", nrow = 3, rel_heights = c(1, 1, 1.2), rel_widths = c(1, 1, 2))
 
