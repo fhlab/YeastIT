@@ -59,3 +59,9 @@ ICE,AT>CG,0,S. cerevisiae
 ICE,AT>TA,0,S. cerevisiae
 ICE,GC>TA,0,S. cerevisiae
 ICE,GC>CG,0,S. cerevisiae
+eMutaT7,AT>GC,0,E. coli
+eMutaT7,GC>AT,100,E. coli
+eMutaT7,AT>CG,0,E. coli
+eMutaT7,AT>TA,0,E. coli
+eMutaT7,GC>TA,0,E. coli
+eMutaT7,GC>CG,0,E. coli

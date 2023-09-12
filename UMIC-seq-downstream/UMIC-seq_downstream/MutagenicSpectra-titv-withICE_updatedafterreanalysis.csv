@@ -19,3 +19,5 @@ epPCR (Mutazyme II),transversion,54.45,in vitro
 "epPCR (Taq, Mn2+)",transversion,25.43,in vitro
 ICE,transition,51,S. cerevisiae
 ICE,transversion,49,S. cerevisiae
+eMutaT7,transition,100,E. coli
+eMutaT7,transversion,0,E. coli
